@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mediaflow
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: TRUST_PROXY
+        value: "true"
+      - key: MAX_CONCURRENT_JOBS
+        value: "1"
+      - key: FILE_TTL_MINUTES
+        value: "30"
