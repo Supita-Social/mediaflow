@@ -140,6 +140,9 @@ location / {
 
 - **Mantenha o yt-dlp atualizado.** O YouTube muda com frequência: rode `pip install -U yt-dlp` periodicamente ou reconstrua a imagem Docker.
 - IPs de datacenter podem receber o aviso "confirme que você não é um robô". Nesses casos o app mostra o erro `SOURCE_THROTTLED`. Se esse aviso aparecer, configure `YTDLP_COOKIES_FILE` com cookies de uma conta própria, respeitando os termos da plataforma.
+- **Cookies no Render:** exporte os cookies do youtube.com com a extensão "Get cookies.txt LOCALLY", de preferência usando uma conta secundária. No serviço, abra **Environment → Secret Files** e crie o arquivo `cookies.txt` com esse conteúdo. Depois adicione a variável `YTDLP_COOKIES_FILE=/etc/secrets/cookies.txt`. O app trabalha com uma cópia do arquivo, porque os arquivos secretos do Render são somente leitura.
+- O yt-dlp usa o Node.js (`YTDLP_JS_RUNTIMES=node`) para resolver os desafios JavaScript do YouTube. Sem isso, muitos vídeos falham ou ficam sem formatos.
+- As falhas do yt-dlp são registradas nos logs do servidor com as últimas linhas da mensagem original, o que facilita o diagnóstico.
 - O estado das conversões fica em memória, então rode **uma instância** por disco. Para escalar horizontalmente, troque `JobManager` por uma fila com Redis (por exemplo, BullMQ) e use armazenamento compartilhado.
 - Ajuste `MAX_CONCURRENT_JOBS` à CPU disponível. Converter para MP3 e unir 1080p consomem processador e banda.
 

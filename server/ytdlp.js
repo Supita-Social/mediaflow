@@ -1,16 +1,44 @@
 'use strict';
 
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const config = require('./config');
 const { AppError, fromYtdlpStderr } = require('./errors');
 
 const PROGRESS_PREFIX = 'MFPROG|';
 
+// O yt-dlp regrava o arquivo de cookies ao terminar. Como arquivos secretos
+// (ex.: /etc/secrets no Render) são somente leitura, trabalhamos com uma cópia.
+let cookiesPath = null;
+function prepareCookies() {
+  if (!config.cookiesFile) return;
+  if (!fs.existsSync(config.cookiesFile)) {
+    console.warn(`[yt-dlp] arquivo de cookies não encontrado: ${config.cookiesFile}`);
+    return;
+  }
+  cookiesPath = path.join(os.tmpdir(), 'mediaflow-cookies.txt');
+  fs.copyFileSync(config.cookiesFile, cookiesPath);
+  fs.chmodSync(cookiesPath, 0o600);
+  console.log('[yt-dlp] usando cookies configurados');
+}
+
 function baseArgs() {
   const args = ['--no-playlist', '--no-warnings', '--no-cache-dir', '--ignore-config'];
+  if (config.jsRuntimes) {
+    for (const runtime of config.jsRuntimes.split(',').map((r) => r.trim()).filter(Boolean)) {
+      args.push('--js-runtimes', runtime);
+    }
+  }
   if (config.ffmpegPath) args.push('--ffmpeg-location', config.ffmpegPath);
-  if (config.cookiesFile) args.push('--cookies', config.cookiesFile);
+  if (cookiesPath) args.push('--cookies', cookiesPath);
   return args;
+}
+
+function logFailure(context, stderr) {
+  const tail = stderr.trim().split('\n').slice(-6).join('\n');
+  console.error(`[yt-dlp] falha em ${context}:\n${tail}`);
 }
 
 /** Executa o yt-dlp e devolve stdout completo (usado na análise). */
@@ -39,8 +67,9 @@ function run(args, { timeoutMs }) {
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      if (code === 0) resolve(stdout);
-      else reject(fromYtdlpStderr(stderr));
+      if (code === 0) return resolve(stdout);
+      logFailure('análise', stderr);
+      return reject(fromYtdlpStderr(stderr));
     });
   });
 }
@@ -307,6 +336,7 @@ function download({ url, format, quality, outputTemplate, onProgress }) {
       clearTimeout(timer);
       if (canceled) return reject(new AppError('CANCELED', 'Conversão cancelada.', 499));
       if (code === 0) return resolve();
+      logFailure('download', stderr);
       return reject(fromYtdlpStderr(stderr));
     });
   });
@@ -321,4 +351,4 @@ function download({ url, format, quality, outputTemplate, onProgress }) {
   };
 }
 
-module.exports = { fetchInfo, summarizeInfo, buildDownloadArgs, download, qualityLabel };
+module.exports = { prepareCookies, fetchInfo, summarizeInfo, buildDownloadArgs, download, qualityLabel };

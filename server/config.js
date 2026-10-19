@@ -37,6 +37,9 @@ module.exports = Object.freeze({
   ffmpegPath: process.env.FFMPEG_PATH || '',
   // Arquivo de cookies (formato Netscape) opcional, útil em servidores que o YouTube limita.
   cookiesFile: process.env.YTDLP_COOKIES_FILE || '',
+  // Runtime JavaScript usado pelo yt-dlp para resolver os desafios do YouTube.
+  // O Node.js já está disponível; use "deno" se preferir, ou deixe vazio para o padrão do yt-dlp.
+  jsRuntimes: process.env.YTDLP_JS_RUNTIMES ?? 'node',
 
   workDir: path.resolve(process.env.WORK_DIR || path.join(__dirname, '..', 'tmp')),
 

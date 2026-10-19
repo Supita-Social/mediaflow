@@ -215,6 +215,7 @@ app.use((err, req, res, next) => {
 
 async function main() {
   await jobs.init();
+  ytdlp.prepareCookies();
   const server = app.listen(config.port, config.host, () => {
     console.log(`MediaFlow rodando em http://localhost:${config.port}`);
   });
