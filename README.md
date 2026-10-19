@@ -104,7 +104,7 @@ docker compose up -d --build
 docker build -t mediaflow . && docker run -p 3000:3000 --env-file .env mediaflow
 ```
 
-A imagem já inclui FFmpeg e yt-dlp, roda com um usuário sem privilégios e tem um health check.
+A imagem já inclui FFmpeg e yt-dlp e tem um health check. Ela roda como root dentro do contêiner para conseguir ler os Secret Files do Render.
 
 ### Render / Railway / Fly.io
 

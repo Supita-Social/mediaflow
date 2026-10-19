@@ -14,14 +14,20 @@ const PROGRESS_PREFIX = 'MFPROG|';
 let cookiesPath = null;
 function prepareCookies() {
   if (!config.cookiesFile) return;
-  if (!fs.existsSync(config.cookiesFile)) {
-    console.warn(`[yt-dlp] arquivo de cookies não encontrado: ${config.cookiesFile}`);
-    return;
+  try {
+    const content = fs.readFileSync(config.cookiesFile, 'utf8');
+    if (!/youtube\.com/.test(content)) {
+      console.warn('[yt-dlp] o arquivo de cookies não contém cookies do youtube.com');
+    }
+    cookiesPath = path.join(os.tmpdir(), 'mediaflow-cookies.txt');
+    fs.writeFileSync(cookiesPath, content, { mode: 0o600 });
+    console.log(`[yt-dlp] usando cookies configurados (${content.split('\n').length} linhas)`);
+  } catch (err) {
+    const reason = { ENOENT: 'não encontrado', EACCES: 'sem permissão de leitura' }[err.code] || err.code;
+    let listing = '';
+    try { listing = fs.readdirSync(path.dirname(config.cookiesFile)).join(', ') || '(vazia)'; } catch (e) { listing = e.code; }
+    console.warn(`[yt-dlp] arquivo de cookies ${reason}: ${config.cookiesFile} — conteúdo da pasta: ${listing}`);
   }
-  cookiesPath = path.join(os.tmpdir(), 'mediaflow-cookies.txt');
-  fs.copyFileSync(config.cookiesFile, cookiesPath);
-  fs.chmodSync(cookiesPath, 0o600);
-  console.log('[yt-dlp] usando cookies configurados');
 }
 
 function baseArgs() {
