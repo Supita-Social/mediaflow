@@ -138,7 +138,8 @@ location / {
 
 ### Dicas de produção
 
-- **Mantenha o yt-dlp atualizado.** O YouTube muda com frequência: rode `pip install -U yt-dlp` periodicamente ou reconstrua a imagem Docker.
+- **O yt-dlp se atualiza sozinho.** No Docker, o contêiner instala a versão nightly mais recente a cada inicialização (`YTDLP_AUTO_UPDATE=true`). Se surgir o erro "Failed to extract any player response", basta reiniciar o serviço (no Render: **Manual Deploy → Restart service**).
+- **Mantenha o yt-dlp atualizado fora do Docker também.** O YouTube muda com frequência: rode `pip install -U yt-dlp` periodicamente ou reconstrua a imagem Docker.
 - IPs de datacenter podem receber o aviso "confirme que você não é um robô". Nesses casos o app mostra o erro `SOURCE_THROTTLED`. Se esse aviso aparecer, configure `YTDLP_COOKIES_FILE` com cookies de uma conta própria, respeitando os termos da plataforma.
 - **Cookies no Render:** exporte os cookies do youtube.com com a extensão "Get cookies.txt LOCALLY", de preferência usando uma conta secundária. No serviço, abra **Environment → Secret Files** e crie o arquivo `cookies.txt` com esse conteúdo. Depois adicione a variável `YTDLP_COOKIES_FILE=/etc/secrets/cookies.txt`. O app trabalha com uma cópia do arquivo, porque os arquivos secretos do Render são somente leitura.
 - O yt-dlp usa o Node.js (`YTDLP_JS_RUNTIMES=node`) para resolver os desafios JavaScript do YouTube. Sem isso, muitos vídeos falham ou ficam sem formatos.
